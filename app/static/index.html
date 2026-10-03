@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b6b4a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NBR"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg">
+<title>NBR - Next Basket Recommender</title><style>
+:root{--bg:#fafaf7;--fg:#222;--mut:#6b6b66;--card:#fff;--bd:#e3e1d8;--ac:#1b6b4a;--ac2:#b4570a;--on:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#161614;--fg:#eee;--mut:#9a9a92;--card:#1f1f1c;--bd:#33332e;--ac:#5cc79a;--ac2:#f0a257;--on:#102018}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--bd)}
+header b{font-size:18px;display:block}header .mut{display:block}
+nav{display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid var(--bd);overflow-x:auto}
+nav button{border:1px solid transparent;background:none;color:var(--mut);padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--card);border-color:var(--bd);color:var(--fg);font-weight:600}
+main{max-width:1000px;margin:0 auto;padding:16px}.tab{display:none}.tab.on{display:block}
+h2{font-size:16px;margin:20px 0 8px}.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}.c b{font-size:22px;display:block;overflow-wrap:anywhere}.c span,.mut{color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}th{color:var(--mut);font-weight:600}.w{overflow-x:auto}
+input,select,button.p{font:inherit;border:1px solid var(--bd);border-radius:10px;padding:9px 12px;background:var(--card);color:var(--fg);min-height:42px}
+button.p{background:var(--ac);color:var(--on);border-color:var(--ac);cursor:pointer;font-weight:600}button.p:disabled{opacity:.5}
+.warn{background:var(--card);border:1px solid var(--bd);border-left:4px solid var(--ac2);border-radius:8px;padding:8px 12px;font-size:13px;margin:8px 0}
+.t1{color:var(--ac);font-weight:600}.t2{color:var(--ac2);font-weight:600}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.row label{display:flex;gap:6px;align-items:center}
+pre{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;font-size:13px;max-height:260px;overflow:auto;white-space:pre-wrap}
+.bar{height:8px;background:var(--ac);border-radius:4px}
+@media(max-width:700px){
+ body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+ nav{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:1px solid var(--bd);border-bottom:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));gap:2px;justify-content:space-between;overflow:visible}
+ nav button{flex:1;padding:8px 2px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:10px}
+ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+ main{padding:12px}input,select{font-size:16px}.row>*{flex:1 1 140px}.row input[type=checkbox]{flex:0 0 auto;min-height:0}
+ .kpi{grid-template-columns:1fr 1fr}
+ table,tbody{display:block;border:0;background:none}tr:first-child{display:none}
+ tr{display:block;background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;padding:6px 10px}
+ td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 0;text-align:right;overflow-wrap:anywhere}
+ td::before{content:attr(data-l);color:var(--mut);text-align:left;flex:0 0 42%}
+ .w{overflow:visible}
+}
+@media(min-width:701px){nav button svg{display:none}}
+</style></head><body>
+<header><b>NBR &middot; Next Basket Recommender</b><span class="mut" id="ds">Loading...</span></header>
+<nav id="nav"></nav>
+<main>
+<section class="tab on" id="t-over"><div class="kpi" id="kpi"></div>
+<h2>Method comparison (test set)</h2><div class="w"><table id="res"></table></div>
+<p class="mut" id="pick"></p><p class="mut" id="ss"></p></section>
+
+<section class="tab" id="t-rec"><div class="row"><input id="q" placeholder="Customer ID, e.g. C10179" list="cl" autocomplete="off" autocapitalize="characters"><datalist id="cl"></datalist>
+<label>Items <select id="k"><option>3</option><option selected>5</option><option>8</option><option>10</option></select></label>
+<label>Hour <input id="hr" type="number" inputmode="numeric" min="0" max="23" placeholder="0-23" style="width:90px"></label>
+<label><input type="checkbox" id="ex"> Reserve last slot for a new product</label>
+<button class="p" id="go">Show</button></div><div id="cmsg" class="mut"></div>
+<div id="cinfo" class="mut"></div><div class="w"><table id="crec"></table></div><h2>Recent orders</h2><div class="w"><table id="chist"></table></div></section>
+
+<section class="tab" id="t-due"><div class="row"><label>Window &plusmn; days <select id="win"><option>7</option><option selected>14</option><option>30</option></select></label><span class="mut" id="dmeta"></span></div>
+<div class="w"><table id="due"></table></div></section>
+
+<section class="tab" id="t-rep"><p class="mut" id="ov"></p><h2>By category</h2><div class="w"><table id="cat"></table></div>
+<h2>Most frequently bought products (top 30)</h2><div class="w"><table id="prod"></table></div><div id="chbox"><h2>By sales channel</h2><div class="w"><table id="chn"></table></div></div></section>
+
+<section class="tab" id="t-up"><p>Upload an order file (CSV/XLSX) with customer ID, date, order number and product code. The app evaluates the models and switches to the new data (a few seconds up to about 2 minutes).</p>
+<div class="warn">Data is processed on this computer only. Use real member data only with PDPA consent.</div>
+<div class="row"><input type="file" id="f" accept=".csv,.xlsx"> <label><input type="checkbox" id="simf"> Customer IDs are simulated</label></div>
+<div class="row"><label>Train/test cut date (blank = leave-last-out) <input id="cut" placeholder="YYYY-MM-DD"></label>
+<label>Column mapping (optional) <input id="map" placeholder="sku=product_code,customer_id=member_id"></label></div>
+<button class="p" id="up">Upload and evaluate</button><pre id="log" hidden></pre></section>
+</main>
+<script>
+const $=i=>document.getElementById(i);
+function el(t,a,...k){const e=document.createElement(t);for(const[n,v]of Object.entries(a||{}))n=='cls'?e.className=v:e.setAttribute(n,v);for(const c of k)e.append(c instanceof Node?c:document.createTextNode(c==null?'-':c));return e}
+function table(id,heads,rows){const t=$(id);t.replaceChildren(el('tr',{},...heads.map(h=>el('th',{},h))),...rows.map(r=>el('tr',{},...r.map((c,i)=>el('td',{'data-l':heads[i]},c)))))}
+const api=async(u,o)=>{const r=await fetch(u,o);const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
+const pc=x=>x==null?'-':(x*100).toFixed(1)+'%',f3=x=>x==null?'-':Number(x).toFixed(3),nf=x=>x==null?'-':Number(x).toLocaleString('en-US');
+const ICON={over:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',rec:'<path d="M6 7h13l-1.5 9H8zM6 7 5 3H2"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/>',due:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',rep:'<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',up:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'};
+const tabs=[['over','Overview'],['rec','Customer'],['due','Due soon'],['rep','Repeat'],['up','Upload']];
+$('nav').append(...tabs.map(([k,l])=>{const b=el('button',{type:'button'});b.innerHTML='<svg viewBox="0 0 24 24">'+ICON[k]+'</svg>';b.append(el('span',{},l));b.dataset.k=k;b.onclick=()=>show(k);return b}));
+function show(k){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id=='t-'+k));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k==k));if(k=='due')loadDue();if(k=='rep')loadRep();scrollTo(0,0)}
+async function status(){const s=await api('/api/status');$('ds').textContent=s.name+' · method: '+s.method;
+const m=s.summary;$('kpi').replaceChildren(...[['Customers',nf(m.customers)],['Orders',nf(m.baskets)],['Products (SKU)',nf(m.products)],['Overall repeat rate',pc(s.overall_repeat)],['Customers with 2+ orders',nf(m.customers_2plus)],['Data period',m.first+' to '+m.last]].map(([l,v])=>el('div',{cls:'c'},el('b',{},v),el('span',{},l))));
+table('res',['Method','NDCG@10','95% CI','NDCG@5','MRR@10','HR@3','Repeat recall','New-item recall','vs Personal'],s.results.map(r=>[r.method+(r.method==s.method?' ✓':''),f3(r.ndcg10),f3(r.ci_lo)+' to '+f3(r.ci_hi),f3(r.ndcg5),f3(r.mrr10),f3(r.hr3),f3(r.recall_repeat),f3(r.recall_explore),r.diff_vs_personal==null?'-':(r.diff_vs_personal>=0?'+':'')+f3(r.diff_vs_personal)]));
+$('pick').textContent='A method more complex than Personal is used only when it beats Personal on validation with statistical support; otherwise Personal is kept.';
+const z=s.sample;$('ss').textContent=z.test_customers!=null?`Test customers: ${nf(z.test_customers)} · smallest detectable difference ≈ ${f3(z.mde_current)} NDCG@10 · customers needed: ${nf(z.customers_needed_delta_0_05)} (Δ=0.05) / ${nf(z.customers_needed_delta_0_03)} (Δ=0.03)`:'';
+if(m.products<50)$('ss').textContent+=` · Warning: only ${m.products} SKUs`}
+async function cust(){const d=await api('/api/customers?q='+encodeURIComponent($('q').value));$('cl').replaceChildren(...d.map(x=>el('option',{value:x.id},x.baskets+' orders')))}
+$('q').oninput=cust;
+$('go').onclick=async()=>{$('cmsg').textContent='';try{const id=$('q').value.trim();const d=await api(`/api/customer?id=${encodeURIComponent(id)}&k=${$('k').value}&explore=${$('ex').checked?1:0}`+($('hr').value?'&hour='+$('hr').value:''));
+$('cinfo').textContent=`${d.id} · ${d.baskets} orders · ${d.first} to ${d.last}`;
+table('crec',['#','Product','Category','Type','Times bought','Last bought','Avg. cycle (days)','Next due'],d.recommendations.map(r=>[r.rank,r.name,r.category,el('span',{cls:r.type=='Repeat'?'t1':'t2'},r.type),r.times_bought,r.last_bought,r.median_gap_days,r.next_due]));
+table('chist',['Date','Order no.','Products'],d.history.map(h=>[h.date,h.order,h.items.join(', ')]))}catch(e){$('cmsg').textContent=e.message+(e.message.includes('not found')?' — a new customer has no history, so popular products would be used.':'')}};
+async function loadDue(){const d=await api('/api/due?window='+$('win').value);$('dmeta').textContent=`Reference date ${d.today} · ${nf(d.total)} pairs (showing ${d.rows.length})`;
+table('due',['Customer','Product','Times bought','Avg. cycle (days)','Last bought','Next due','Days overdue'],d.rows.map(r=>[r.customer_id,r.name,r.purchases,r.median_gap_days,r.last_purchase,r.next_due,r.overdue_days]))}
+$('win').onchange=loadDue;
+async function loadRep(){const d=await api('/api/repeat');$('ov').textContent='Overall repeat rate '+pc(d.overall)+' (share of purchased items the customer had bought before)';
+const mx=Math.max(...d.by_category.map(x=>x.repeat_rate),.01);
+table('cat',['Category','Items analysed','Repeat rate',''],d.by_category.map(x=>[x.category||'-',nf(x.lines),pc(x.repeat_rate),(()=>{const b=el('div',{cls:'bar'});b.style.width=x.repeat_rate/mx*120+'px';return b})()]));
+table('prod',['Product','Category','Items analysed','Repeat rate'],d.by_product.map(x=>[x.name,x.category,nf(x.lines),pc(x.repeat_rate)]));
+$('chbox').hidden=!d.by_channel.length;table('chn',['Channel','Items analysed','Repeat rate'],d.by_channel.map(x=>[x.channel,nf(x.lines),pc(x.repeat_rate)]))}
+$('up').onclick=async()=>{const f=$('f').files[0];if(!f)return;const p=new URLSearchParams({name:f.name,ext:f.name.toLowerCase().endsWith('.xlsx')?'xlsx':'csv',simulated:$('simf').checked?1:0});
+if($('cut').value)p.set('cut',$('cut').value);if($('map').value)p.set('map',$('map').value);
+$('up').disabled=true;$('log').hidden=false;$('log').textContent='Uploading...';
+try{const r=await api('/api/upload?'+p,{method:'POST',body:f});const iv=setInterval(async()=>{const j=await api('/api/job?id='+r.job);$('log').textContent=j.log.join('\n');
+if(j.state!='running'){clearInterval(iv);$('up').disabled=false;if(j.state=='done'){await status();cust()}}},1500)}catch(e){$('log').textContent=e.message;$('up').disabled=false}};
+show('over');status();cust();
+</script></body></html>
